@@ -60,24 +60,21 @@ class Client:
         return url in links_for_track
 
     def _save_track(self, track):
-        """Сохранение трека в файл."""
-        try:
-            track_source = track.download_bytes()
-            file_name = f"{track.title}.mp3"
-            with open(file_name, "wb") as f:
-                f.write(track_source)
-            try:
-                audio = MP3(file_name, ID3=ID3)
-            except ID3NoHeaderError:
-                audio = MP3(file_name)
-                audio.add_tags()
+        # """Сохранение трека в файл."""
+        track_source = track.download_bytes()
+        file_name = f"{track.title}.mp3"
+        with open(file_name, "wb") as f:
+            f.write(track_source)
 
-            # Устанавливаем метаданные
-            audio.tags.add(TIT2(encoding=3, text=track.title))
-            audio.tags.add(TPE1(encoding=3, text=', '.join(track.artists_name())))
+        audio = MP3(file_name, ID3=ID3)
+        audio.add_tags()
 
-            print(f"Трек '{track.title}' успешно скачан.")
-            return f"{track.title}.mp3"
-        except Exception as ex:
-            # print(f"Ошибка при скачивании трека: {ex}")
-            return
+        # Устанавливаем метаданные
+        audio.tags.add(TIT2(encoding=3, text=track.title))
+        audio.tags.add(TPE1(encoding=3, text=', '.join(track.artists_name())))
+
+        # Сохраняем изменения
+        audio.save()
+
+        print(f"Трек '{track.title}' успешно скачан.")
+        return f"{track.title}.mp3"
