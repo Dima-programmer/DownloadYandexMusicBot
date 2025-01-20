@@ -1,5 +1,6 @@
 # dw_yandex_music.py
-
+from mutagen.mp3 import MP3
+from mutagen.id3 import ID3, ID3NoHeaderError, TIT2, TPE1
 from yandex_music import Client as YandexClient
 
 
@@ -62,8 +63,19 @@ class Client:
         """Сохранение трека в файл."""
         try:
             track_source = track.download_bytes()
-            with open(f"{track.title}.mp3", "wb") as f:
+            file_name = f"{track.title}.mp3"
+            with open(file_name, "wb") as f:
                 f.write(track_source)
+            try:
+                audio = MP3(file_name, ID3=ID3)
+            except ID3NoHeaderError:
+                audio = MP3(file_name)
+                audio.add_tags()
+
+            # Устанавливаем метаданные
+            audio.tags.add(TIT2(encoding=3, text=track.title))
+            audio.tags.add(TPE1(encoding=3, text=', '.join(track.artists_name())))
+
             print(f"Трек '{track.title}' успешно скачан.")
             return f"{track.title}.mp3"
         except Exception as ex:
